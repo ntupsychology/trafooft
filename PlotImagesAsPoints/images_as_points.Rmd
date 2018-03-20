@@ -5,7 +5,7 @@ date: "20 March 2018"
 output: html_document
 ---
 
-Does what it says. You need a package called ggimage, then it's very simple. The example below is from my son's maths homework.
+Does what it says. You need a package called ggimage, then it's very simple. You just need a column in your data frame that says what image to plot at which point. In the example below (from my son's maths homework) I've plotted the same image at each point. But you don't need to do that.
 
 ```{R}
 library(tidyverse)
