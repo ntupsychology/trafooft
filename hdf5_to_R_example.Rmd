@@ -13,20 +13,20 @@ library(stringr)
 library(hdf5r)
 
 # list your files
-fs = list.files("./data",full.names = T);fs
+fs <- list.files("./data",full.names = T);fs
 
 # pick an hdf5 file
-filename = fs[4]
+filename <- fs[4]
 
 # this is where the magic happens
 h5f <- H5File$new(filename, mode = "r")
 
 # get the names of the individual datasets in your hdf5 file
-getDatasetName = function(x){tail(strsplit(x,'/')[[1]],1)}
+getDatasetName <- function(x){tail(strsplit(x,'/')[[1]],1)}
 
 # write all datasets in hdf5 file to separate data frames
 for(dset in list.datasets(h5f)){
-  sname = getDatasetName(dset)
+  sname <- getDatasetName(dset)
   assign(sname,h5f[[dset]][]) 
   }
 ```
