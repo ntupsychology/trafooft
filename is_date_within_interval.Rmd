@@ -1,0 +1,67 @@
+---
+title: "Karen's Date Problem"
+author: "Mark Andrews"
+date: "18 April 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=F)
+```
+
+```{r}
+library(dplyr)
+library(haven)
+library(lubridate)
+
+Df <- read_sav("data/seg dsh data ONLY DUAL AND SH 7 April.sav")
+
+dsh_within_segdates <- function(seg_indate_var, seg_outdate_var){
+  function(dsh_variable){
+    ymd(dsh_variable) %within% interval(Df[[seg_indate_var]], Df[[seg_outdate_var]])
+  }
+}
+
+.dsh_within_segdates <- function(dsh_variable, seg_indate_var, seg_outdate_var){
+  ymd(dsh_variable) %within% interval(Df[[seg_indate_var]], Df[[seg_outdate_var]])
+}
+
+dsh_within_segdates <- function(dsh_variable, seg_indate_var, seg_outdate_var){
+  .dsh_within_segdates(Df[[dsh_variable]], seg_indate_var, seg_outdate_var)
+}
+
+any_dsh_within_segdates <- function(seg_indate_var, seg_outdate_var){
+  lapply(select(Df, matches('^DSH[0-9]*$')), 
+         function(dsh_variable){
+           .dsh_within_segdates(dsh_variable, seg_indate_var, seg_outdate_var)
+           }) %>% 
+    as.data.frame() %>% 
+    apply(1, any)
+}
+
+```
+
+# Examples 
+
+* Did the `DSH1` event take place between the `SegInDate_A` and `SegOutDate_A` dates?
+```{r}
+dsh_within_segdates('DSH1', 'SegInDate_A', 'SegOutDate_A')
+```
+
+* Did the `DSH3` event take place between the `SegInDate_C` and `SegOutDate_C` dates?
+```{r}
+dsh_within_segdates('DSH3', 'SegInDate_C', 'SegOutDate_C')
+```
+
+* Did any `DSH` event take place between the `SegInDate_A` and `SegOutDate_A` dates?
+```{r}
+any_dsh_within_segdates('SegInDate_A', 'SegOutDate_A')
+```
+
+
+* Did any `DSH` event take place between the `SegInDate_C` and `SegOutDate_C` dates?
+```{r}
+any_dsh_within_segdates('SegInDate_C', 'SegOutDate_C')
+```
+
+
