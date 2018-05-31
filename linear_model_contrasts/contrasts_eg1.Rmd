@@ -1,7 +1,9 @@
 ---
 author: "Mark Torrance"
 date: "17 May 2018"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 #Specifying Contrasts for linear model
