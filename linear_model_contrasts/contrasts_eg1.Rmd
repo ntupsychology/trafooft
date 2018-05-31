@@ -1,0 +1,91 @@
+---
+author: "Mark Torrance"
+date: "17 May 2018"
+output: html_document
+---
+
+#Specifying Contrasts for linear model
+At the moment my motivation for making this available is so that someone can tell me if I'm doing what I want to do.
+
+Get ```tidyverse``` for data wrangling and ```lme4``` for modelling and load some data that I prepared earlier.
+
+```{r echo = T, message = F}
+library(tidyverse)
+library(lme4)
+
+load("rti_narrative_data.Rda")
+```
+
+
+This load a data frame called ```Df``` that looks like this:
+
+```{r, eval = T, echo = F}
+summary(Df)
+```
+
+```T1234``` is a factor representing tests at founr different time points.
+
+```Condition``` comprises two groups, ```comp``` and ```int```
+
+I am constructing comparisons as follows.
+
+Create a "flat" single factor representing all cells in the design.
+
+```{r, eval = T}
+Df <- Df %>% 
+  mutate(cond_by_task = interaction(T1234,Condition))
+summary(Df$cond_by_task)
+```
+
+Then define some contrasts:
+
+Main effect of group
+
+```{r, eval = T}
+cond <- cbind(c(-1,-1,-1,-1,1,1,1,1))
+colnames(cond) <- c(' group')
+```
+
+
+Main effects of time with separate contrasts giving slope, averaged across groups, between T1 and T2, T2 and T3, and T3 and T4.
+
+```{r, eval = T}
+time <- cbind(rep(c(-1,1,0,0),2),
+             rep(c(0,-1,1,0),2),
+             rep(c(0,0,-1,1),2))
+colnames(time) <- c(' T12',' T23',' T34')
+```
+
+Interaction effects. This asks whether there the slopes for the two groups differ, looking separately at slopes between T1 and T2, T2 and T3, and T3 and T4.
+
+```{r, eval = T}
+inter <- cbind(c(1,-1,0,0,-1,1,0,0),
+              c(0,1,-1,0,0,-1,1,0),
+              c(0,0,1,-1,0,0,-1,1))
+colnames(inter) <- c(' T12:group',' T23:group',' T34:group')
+```
+
+
+Then put these all together and assign them to the ```cond_by_task``` factor.
+
+```{r, eval = T}
+conts <- cbind(cond,time,inter)
+contrasts(Df$cond_by_task, how.many = ncol(conts)) <- conts
+contrasts(Df$cond_by_task)
+```
+
+
+You don't need an intercept because lmer gives you it for free (and won't allow you to use your own contrast but specify no intercept in the model).
+
+Then run the model and get the coefficients.
+
+```{r, eval = T}
+m <- lmer(score ~ cond_by_task + (1|Subno), 
+          data = Df)
+
+summary(m)$coef
+```
+
+***
+
+So, the question is: Is this set of contrasts giving me what I've claimed it's giving me? If not, what am I doing wrong?
