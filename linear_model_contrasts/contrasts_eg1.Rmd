@@ -17,13 +17,13 @@ load("rti_narrative_data.Rda")
 ```
 
 
-This load a data frame called ```Df``` that looks like this:
+This loads a data frame called ```Df``` that looks like this:
 
 ```{r, eval = T, echo = F}
 summary(Df)
 ```
 
-```T1234``` is a factor representing tests at founr different time points.
+```T1234``` is a factor representing tests at four different time points.
 
 ```Condition``` comprises two groups, ```comp``` and ```int```
 
