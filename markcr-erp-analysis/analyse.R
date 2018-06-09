@@ -24,5 +24,5 @@ ggplot(Df,
 
 
 M <- lmer(erp ~ pmq + (1|participant) + (1|site) + (1|condition),
-          data = filter(Df))
+          data = Df)
      
