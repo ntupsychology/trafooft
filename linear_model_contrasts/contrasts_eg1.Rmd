@@ -35,7 +35,8 @@ Create a "flat" single factor representing all cells in the design.
 
 ```{r, eval = T}
 Df <- Df %>% 
-  mutate(cond_by_task = interaction(T1234,Condition))
+  mutate(cond_by_task = interaction(T1234,Condition)) %>% 
+  filter(complete.cases(.))
 summary(Df$cond_by_task)
 ```
 
@@ -91,3 +92,64 @@ summary(m)$coef
 ***
 
 So, the question is: Is this set of contrasts giving me what I've claimed it's giving me? If not, what am I doing wrong?
+
+***
+
+One way of answering this question - of checking that the contrasts that I've specified really do test the statistical model that I think they are testing, is to separate out the contrasts and get model fits for each, then look to see if the fits for these models make sense. I'm going to do this without the random by-subject effect, because this makes things clearer (because subjects are only in one condition, so if you exclude a condition factor but include by-subject effects, then this effectively reintroduces the condition effect).
+
+So, fit some models and use them to predict scores, and save these into the data frame: ```Df$fit = fitted(mymodel)```.
+
+```{r, eval = T}
+# grand mean
+m <-lm(score ~ 1, data = Df)
+Df$fitGrandMean = fitted(m)
+
+# just main effect of condition (group)
+conts <- cond
+contrasts(Df$cond_by_task, how.many = ncol(conts)) = conts
+m = lm(score ~ cond_by_task, data = Df)
+Df$fitCond = fitted(m)
+
+# just main effect of time
+conts <- time
+contrasts(Df$cond_by_task, how.many = ncol(conts)) = conts
+m = lm(score ~ cond_by_task, data = Df)
+Df$fitTime = fitted(m)
+
+# main effects of cond and time
+conts = cbind(time,cond)
+contrasts(Df$cond_by_task, how.many = ncol(conts)) = conts
+m = lm(score ~ cond_by_task, data = Df)
+Df$fitTime_Cond = fitted(m)
+
+# just interaction
+conts = inter
+contrasts(Df$cond_by_task, how.many = ncol(conts)) = conts
+m = lm(score ~ cond_by_task, data = Df)
+Df$fitTime_X_Cond = fitted(m)
+
+# main effects and interaction
+conts = cbind(time,cond,inter)
+contrasts(Df$cond_by_task, how.many = ncol(conts)) = conts
+m = lm(score ~ cond_by_task, data = Df)
+Df$fitTime_Cond_Time_X_Cond = fitted(m)
+
+```
+
+And then have a look at them.
+
+```{r, eval = T}
+pd = position_dodge(.2)     
+Df %>% gather(model, fits, -Subno, -T1234, -Condition, -cond_by_task) %>%
+  mutate(model = factor(model,levels = unique(model))) %>% 
+  ggplot(aes(y = fits, x = T1234, colour = Condition)) +
+  geom_line(aes(group = Condition), 
+            stat = 'summary', fun.y = "mean", na.rm = T,
+            position = pd) +
+  geom_point(stat = 'summary', fun.y = "mean", na.rm = T,
+             size = 3, shape = 18,
+             position = pd) +
+  facet_wrap(~model)
+```
+
+Score is the raw score. So, this suggests that the contrasts are doing what they are meant to be doing.
